@@ -45,6 +45,7 @@ These features define the minimum functionality required. prelint will validate 
 - Work
 - Study
 - Read
+- Music Instrument practice
 - Relax
 - Connect with someone
 - Something else
