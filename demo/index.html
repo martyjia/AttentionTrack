@@ -3,261 +3,213 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ZenScroll Demo — Mindful by design</title>
+  <title>ZenScroll Demo — Background-first intervention</title>
   <style>
     :root {
-      --bg:#0b1020;
-      --card:#121a33;
-      --ink:#e9edff;
-      --muted:#9fb0e3;
-      --teal:#20c7c7;
-      --indigo:#4f46e5;
-      --danger:#ff6b6b;
-      --ok:#4ade80;
-      --warn:#facc15;
+      --bg:#0b1020; --card:#121a33; --ink:#e9edff; --muted:#9fb0e3;
+      --teal:#20c7c7; --indigo:#4f46e5; --warn:#facc15; --ok:#4ade80; --danger:#ff6b6b;
     }
-    * { box-sizing: border-box; }
-    body {
-      margin:0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background: radial-gradient(1200px 600px at 20% -10%, #192552 0%, var(--bg) 50%);
-      color: var(--ink);
-      min-height: 100vh;
-    }
-    .wrap { max-width:1100px; margin:0 auto; padding:24px; }
-    h1 { margin:0 0 8px; font-size:2rem; }
-    .tag { color: var(--teal); font-weight:600; margin-bottom:20px; }
-    .grid { display:grid; grid-template-columns: 1.2fr 1fr; gap:16px; }
-    .card {
-      background: linear-gradient(180deg, #152045, var(--card));
-      border:1px solid #2b3564;
-      border-radius:16px;
-      padding:16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.3);
-    }
-    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .app-btn {
-      padding:8px 12px; border-radius:999px; border:1px solid #3e4b87;
-      background:#1a2550; color:var(--ink); cursor:pointer;
-    }
-    .app-btn.active { background:var(--indigo); border-color:#8f89ff; }
-    input[type="range"] { width:220px; }
-    .pill { padding:4px 10px; border-radius:999px; font-weight:700; }
-    .none{ background:#1f3e2e; color:#9bf3bf;}
-    .slow{ background:#3f3a1b; color:#ffe58f;}
-    .gray{ background:#402426; color:#ffb3b3;}
-    .phone {
-      margin-top:14px;
-      width:100%; aspect-ratio: 9/19; border-radius:28px;
-      border:8px solid #1b1f2f; overflow:hidden; position:relative;
-      background:#111;
-    }
-    .feed {
-      height:100%; overflow:hidden; padding:14px; display:grid; gap:10px;
-      background: linear-gradient(180deg, #1d2650, #12172c);
-      transition: filter .35s ease;
-    }
-    .post {
-      height:72px; border-radius:12px; background:linear-gradient(90deg,#2a3b84,#27356c);
-      border:1px solid #3b4d94;
-    }
-    .overlay {
-      position:absolute; inset:0; display:none; place-items:center;
-      background: rgba(3, 8, 24, .75);
-      backdrop-filter: blur(2px);
-    }
-    .breath {
-      width:min(86%,360px);
-      padding:20px; border-radius:20px; text-align:center;
-      background: radial-gradient(circle at 50% 35%, rgba(32,199,199,.25), rgba(79,70,229,.25));
-      border:1px solid rgba(159,176,227,.4);
-    }
-    .orb {
-      width:120px; height:120px; margin:8px auto 14px; border-radius:50%;
-      background: radial-gradient(circle at 50% 35%, #79ffff, #4f46e5 60%, #2a1d6b);
-      animation: pulse 2s infinite ease-in-out;
-      box-shadow: 0 0 30px rgba(79,70,229,.45);
-    }
-    @keyframes pulse {
-      0%,100% { transform: scale(.92); }
-      50% { transform: scale(1.08); }
-    }
-    .count { font-size:2rem; font-weight:800; margin:6px 0; }
-    button.cta {
-      margin-top:10px; padding:10px 16px; border:0; border-radius:10px;
-      background:var(--teal); color:#042125; font-weight:800; cursor:pointer;
-    }
-    button.cta[disabled]{ opacity:.45; cursor:not-allowed; }
-    .metric { font-size:.95rem; color:var(--muted); }
-    .kpi { font-size:1.2rem; font-weight:800; color:#fff; }
-    .small{font-size:.88rem; color:var(--muted)}
-    .foot { margin-top:14px; color:#93a0cd; font-size:.85rem; }
-    @media (max-width: 900px){ .grid{grid-template-columns:1fr;} }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto;background:radial-gradient(1200px 600px at 20% -10%, #192552 0%, var(--bg) 50%);color:var(--ink)}
+    .wrap{max-width:1080px;margin:0 auto;padding:24px}
+    .card{background:linear-gradient(180deg,#152045,var(--card));border:1px solid #2b3564;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    h1{margin:0 0 8px}.tag{color:var(--teal);font-weight:700;margin-bottom:16px}
+    .app-btn{padding:8px 12px;border-radius:999px;border:1px solid #3e4b87;background:#1a2550;color:var(--ink);cursor:pointer}
+    .app-btn.active{background:var(--indigo);border-color:#8f89ff}
+    .cta{padding:10px 16px;border:0;border-radius:10px;background:var(--teal);color:#042125;font-weight:800;cursor:pointer}
+    .cta.secondary{background:#25376f;color:#d9e3ff}
+    .pill{padding:3px 10px;border-radius:999px;font-weight:800}
+    .none{background:#1f3e2e;color:#9bf3bf}.slow{background:#3f3a1b;color:#ffe58f}.gray{background:#402426;color:#ffb3b3}
+    .small{font-size:.9rem;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+    @media(max-width:920px){.grid{grid-template-columns:1fr}}
+
+    .phone{margin-top:12px;width:100%;aspect-ratio:9/18;border-radius:28px;border:8px solid #1b1f2f;overflow:hidden;position:relative;background:#111}
+    .feed{height:100%;padding:14px;display:grid;gap:10px;background:linear-gradient(180deg,#1d2650,#12172c);transition:filter .3s}
+    .post{height:72px;border-radius:12px;background:linear-gradient(90deg,#2a3b84,#27356c);border:1px solid #3b4d94}
+
+    .bg-layer{position:absolute;inset:0;display:grid;place-items:center;text-align:center;background:rgba(4,10,28,.86)}
+    .bg-box{width:min(88%,420px);padding:18px;border-radius:14px;border:1px solid #354689;background:#0f1838}
+    .status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;background:var(--ok)}
+
+    .overlay{position:fixed;inset:0;display:none;place-items:center;background:rgba(3,8,24,.86);backdrop-filter:blur(2px);z-index:1000}
+    .breath{width:min(88%,380px);padding:22px;border-radius:20px;text-align:center;background:radial-gradient(circle at 50% 35%, rgba(32,199,199,.25), rgba(79,70,229,.25));border:1px solid rgba(159,176,227,.4)}
+    .orb{width:118px;height:118px;margin:8px auto 14px;border-radius:50%;background:radial-gradient(circle at 50% 35%, #79ffff, #4f46e5 60%, #2a1d6b);animation:pulse 2s infinite ease-in-out;box-shadow:0 0 30px rgba(79,70,229,.45)}
+    @keyframes pulse{0%,100%{transform:scale(.92)}50%{transform:scale(1.08)}}
+    .count{font-size:2rem;font-weight:900;margin:6px 0}
+    .cta[disabled]{opacity:.45;cursor:not-allowed}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>ZenScroll — Interactive Demo</h1>
-    <div class="tag">Mindful by design. Friction on purpose.</div>
+    <h1>ZenScroll — Improved Demo</h1>
+    <div class="tag">Background by default. Show up only when threshold is hit.</div>
 
     <div class="grid">
       <section class="card">
-        <h3>1) App Selection & Threshold</h3>
-        <div class="small">Choose protected apps (simulating FamilyActivityPicker):</div>
+        <h3>Settings</h3>
+        <div class="small">Select protected apps (simulating FamilyControls picker)</div>
         <div class="row" id="apps"></div>
         <div style="height:10px"></div>
+
         <div class="row">
-          <label>Daily threshold: <b><span id="thresholdLabel">30</span> min</b></label>
+          <label>Base threshold: <b><span id="thresholdLabel">30</span> min</b></label>
           <input id="threshold" type="range" min="10" max="120" step="5" value="30" />
+          <span class="small">AI-adjusted: <b><span id="aiThreshold">30</span> min</b></span>
         </div>
+
         <div class="row">
-          <label>Today's usage: <b><span id="usageLabel">0</span> min</b></label>
-          <input id="usage" type="range" min="0" max="180" step="1" value="0" />
+          <label>Usage (manual): <b><span id="usageLabel">0</span> min</b></label>
+          <input id="usage" type="range" min="0" max="240" step="1" value="0" />
         </div>
-        <div style="height:6px"></div>
-        <div class="row">
-          <span>Friction state:</span>
+
+        <div class="row" style="margin-top:8px">
+          <span>State:</span>
           <span id="statePill" class="pill none">NONE</span>
           <span id="stateHint" class="small">No intervention</span>
         </div>
 
         <div class="phone">
           <div id="feed" class="feed"></div>
-          <div id="overlay" class="overlay">
-            <div class="breath">
-              <div class="orb"></div>
-              <h3 style="margin:0">Breathe First</h3>
-              <div id="frictionMsg" class="small">Slow down. Is this intentional?</div>
-              <div class="count" id="countdown">10</div>
-              <button id="continueBtn" class="cta" disabled>I'm ready to continue</button>
+          <div id="bgLayer" class="bg-layer">
+            <div class="bg-box">
+              <div><span class="status-dot"></span><b>ZenScroll is running in background</b></div>
+              <div class="small" style="margin-top:8px">
+                The app stays silent by default and only surfaces if threshold is reached.
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="row" style="margin-top:10px">
-          <button class="cta" id="simulateOpen">Open protected app</button>
-          <button class="app-btn" id="add5">+5 min usage</button>
+        <div class="row" style="margin-top:12px">
+          <button class="cta" id="bgOn">Start Background Monitor</button>
+          <button class="cta secondary" id="bgOff">Stop Monitor</button>
+          <button class="app-btn" id="add5">+5 min</button>
           <button class="app-btn" id="reset">Reset day</button>
         </div>
+        <div class="small" style="margin-top:8px">Demo speed: 1 second = 1 minute usage while monitor is ON.</div>
       </section>
 
       <section class="card">
-        <h3>2) Demo Metrics (judge-friendly)</h3>
-        <div class="metric">Compulsive opens intercepted</div>
-        <div id="kpiIntercept" class="kpi">0</div>
-        <div style="height:10px"></div>
-        <div class="metric">Breathing interventions completed</div>
-        <div id="kpiBreath" class="kpi">0</div>
-        <div style="height:10px"></div>
-        <div class="metric">Estimated mindless minutes prevented</div>
-        <div id="kpiSaved" class="kpi">0 min</div>
-        <hr style="border-color:#2b3564; border-style:solid; margin:14px 0"/>
-        <h3 style="margin-top:0">3) AI Stub (expansion point)</h3>
-        <div class="small">
-          `aiAdjustedThreshold()` currently simulates a personalized threshold based on recent behavior.
-          In iOS app this maps to CoreML integration.
-        </div>
-        <div style="margin-top:8px" class="small">
-          Adjusted threshold today: <b><span id="aiThreshold">30</span> min</b>
-        </div>
-        <div class="foot">
-          This web demo mirrors the same product logic as the iOS concept:
-          <br/>none → slowDown warning → grayscale + mandatory breathing gate.
-        </div>
+        <h3>Judge-facing Metrics</h3>
+        <div class="small">Compulsive opens intercepted</div>
+        <div id="kpiIntercept" style="font-size:1.3rem;font-weight:900">0</div>
+        <div class="small">Breathing interventions completed</div>
+        <div id="kpiBreath" style="font-size:1.3rem;font-weight:900">0</div>
+        <div class="small">Estimated mindless minutes prevented</div>
+        <div id="kpiSaved" style="font-size:1.3rem;font-weight:900">0 min</div>
+        <hr style="border-color:#2b3564;border-style:solid;margin:14px 0"/>
+        <div class="small"><b>Product behavior upgrade:</b><br/>No constant nagging. Only high-risk moments trigger intervention.</div>
       </section>
     </div>
   </div>
 
-  <script>
-    const appNames = ["TikTok", "Instagram", "YouTube", "X", "Rednote"];
-    const selected = new Set(["TikTok", "Instagram"]);
+  <div id="overlay" class="overlay">
+    <div class="breath">
+      <div class="orb"></div>
+      <h3 style="margin:0">Breathe First</h3>
+      <div id="frictionMsg" class="small" style="margin-top:6px">You've hit your limit.</div>
+      <div id="countdown" class="count">10</div>
+      <button id="continueBtn" class="cta" disabled>I'm ready to continue</button>
+    </div>
+  </div>
 
+  <script>
+    const appNames = ["TikTok","Instagram","YouTube","X","Rednote"];
+    const selected = new Set(["TikTok","Instagram"]);
     const appsEl = document.getElementById('apps');
     const thresholdEl = document.getElementById('threshold');
     const usageEl = document.getElementById('usage');
     const thresholdLabel = document.getElementById('thresholdLabel');
     const usageLabel = document.getElementById('usageLabel');
+    const aiThresholdEl = document.getElementById('aiThreshold');
     const statePill = document.getElementById('statePill');
     const stateHint = document.getElementById('stateHint');
     const feed = document.getElementById('feed');
+    const bgLayer = document.getElementById('bgLayer');
+
     const overlay = document.getElementById('overlay');
     const frictionMsg = document.getElementById('frictionMsg');
     const countdown = document.getElementById('countdown');
     const continueBtn = document.getElementById('continueBtn');
-    const simulateOpenBtn = document.getElementById('simulateOpen');
 
     const kpiIntercept = document.getElementById('kpiIntercept');
     const kpiBreath = document.getElementById('kpiBreath');
     const kpiSaved = document.getElementById('kpiSaved');
-    const aiThresholdEl = document.getElementById('aiThreshold');
 
-    let metrics = {intercept:0, breath:0, saved:0};
-    let timer = null;
+    let metrics = { intercept:0, breath:0, saved:0 };
+    let gateTimer = null;
+    let bgTimer = null;
+    let bgRunning = false;
 
-    for (let i=0; i<11; i++) {
-      const p = document.createElement('div');
-      p.className='post';
-      feed.appendChild(p);
-    }
+    for (let i=0;i<11;i++) { const p=document.createElement('div'); p.className='post'; feed.appendChild(p); }
 
     function renderApps(){
-      appsEl.innerHTML='';
-      appNames.forEach(name => {
+      appsEl.innerHTML = '';
+      for (const n of appNames){
         const b = document.createElement('button');
-        b.className = 'app-btn' + (selected.has(name) ? ' active':'');
-        b.textContent = name;
-        b.onclick = () => {
-          selected.has(name) ? selected.delete(name) : selected.add(name);
-          renderApps();
-        };
+        b.className = 'app-btn' + (selected.has(n)?' active':'');
+        b.textContent = n;
+        b.onclick = () => { selected.has(n) ? selected.delete(n) : selected.add(n); renderApps(); };
         appsEl.appendChild(b);
-      });
+      }
     }
 
     function aiAdjustedThreshold(base, usage){
-      // Placeholder for CoreML per-user compulsive risk score.
+      // Placeholder for CoreML compulsive-risk prediction.
       const risk = Math.min(1, usage / Math.max(base,1));
-      // if risk is high, lower threshold a bit to intervene earlier
       return Math.max(10, Math.round(base * (1 - 0.15 * risk)));
     }
 
-    function frictionState(usage, threshold){
-      const pct = usage / threshold;
-      if (pct < 0.75) return {state:'none', msg:'No intervention'};
-      if (pct < 1.0) return {state:'slow', msg:'Slow down. Is this intentional?'};
-      return {state:'gray', msg:"You've hit your mindful limit for today."};
+    function frictionState(usage, th){
+      const pct = usage / th;
+      if (pct < 0.75) return { state:'none', msg:'No intervention' };
+      if (pct < 1.0) return { state:'slow', msg:'You are nearing your mindful limit.' };
+      return { state:'gray', msg:"You've hit your mindful limit." };
+    }
+
+    function syncMetrics(){
+      kpiIntercept.textContent = metrics.intercept;
+      kpiBreath.textContent = metrics.breath;
+      kpiSaved.textContent = metrics.saved + ' min';
     }
 
     function renderState(){
       const base = Number(thresholdEl.value);
       const usage = Number(usageEl.value);
-      const adjusted = aiAdjustedThreshold(base, usage);
-      aiThresholdEl.textContent = adjusted;
+      const aiTh = aiAdjustedThreshold(base, usage);
+
       thresholdLabel.textContent = base;
       usageLabel.textContent = usage;
+      aiThresholdEl.textContent = aiTh;
 
-      const {state, msg} = frictionState(usage, adjusted);
+      const {state, msg} = frictionState(usage, aiTh);
       statePill.className = 'pill ' + (state==='none'?'none':state==='slow'?'slow':'gray');
       statePill.textContent = state.toUpperCase();
       stateHint.textContent = msg;
-      frictionMsg.textContent = msg;
-
       feed.style.filter = state==='gray' ? 'grayscale(1)' : 'grayscale(0)';
+
+      // Background-first logic: only pop up when threshold is hit.
+      if (bgRunning && state === 'gray' && overlay.style.display !== 'grid') {
+        launchIntervention(msg);
+      }
     }
 
-    function runBreathingGate(){
+    function launchIntervention(msg){
+      metrics.intercept += 1;
+      syncMetrics();
+
+      frictionMsg.textContent = msg;
       overlay.style.display='grid';
-      continueBtn.disabled = true;
+      continueBtn.disabled=true;
       let t = 10;
       countdown.textContent = t;
-      clearInterval(timer);
-      timer = setInterval(() => {
+      clearInterval(gateTimer);
+      gateTimer = setInterval(() => {
         t -= 1;
         countdown.textContent = t;
-        if (t <= 0){
-          clearInterval(timer);
-          continueBtn.disabled = false;
-        }
+        if (t <= 0){ clearInterval(gateTimer); continueBtn.disabled=false; }
       }, 1000);
     }
 
@@ -268,28 +220,21 @@
       syncMetrics();
     };
 
-    function syncMetrics(){
-      kpiIntercept.textContent = metrics.intercept;
-      kpiBreath.textContent = metrics.breath;
-      kpiSaved.textContent = metrics.saved + ' min';
-    }
+    document.getElementById('bgOn').onclick = () => {
+      if (bgRunning) return;
+      if (selected.size === 0){ alert('Select at least one protected app first.'); return; }
+      bgRunning = true;
+      bgLayer.style.display='grid';
+      bgTimer = setInterval(() => {
+        usageEl.value = Math.min(Number(usageEl.max), Number(usageEl.value) + 1);
+        renderState();
+      }, 1000);
+    };
 
-    simulateOpenBtn.onclick = () => {
-      if (selected.size === 0) {
-        alert('Select at least one protected app first.');
-        return;
-      }
-      const base = Number(thresholdEl.value);
-      const usage = Number(usageEl.value);
-      const adjusted = aiAdjustedThreshold(base, usage);
-      const {state} = frictionState(usage, adjusted);
-      if (state === 'none') {
-        alert('App opened normally — no friction yet.');
-        return;
-      }
-      metrics.intercept += 1;
-      syncMetrics();
-      runBreathingGate();
+    document.getElementById('bgOff').onclick = () => {
+      bgRunning = false;
+      clearInterval(bgTimer);
+      bgLayer.style.display='grid';
     };
 
     document.getElementById('add5').onclick = () => {
@@ -299,10 +244,10 @@
 
     document.getElementById('reset').onclick = () => {
       usageEl.value = 0;
-      metrics = {intercept:0, breath:0, saved:0};
-      overlay.style.display='none';
-      clearInterval(timer);
+      metrics = { intercept:0, breath:0, saved:0 };
       syncMetrics();
+      clearInterval(gateTimer);
+      overlay.style.display='none';
       renderState();
     };
 
