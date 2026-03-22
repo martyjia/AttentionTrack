@@ -194,6 +194,7 @@
     let pendingSince = 0;
     let monitorElapsedSec = 0;
     let nextBreakAt = 0;
+    let nextPromptGapMin = 10;
     let sessionIntention = '';
 
     const SPEED_MS={ realtime:60000, demo:1000 };
@@ -300,7 +301,9 @@
 
     function triggerIntervention(msg){
       metrics.inter++; renderMetrics();
-      log('Break prompt shown');
+      // ensure next prompt is delayed by configurable gap (not immediate)
+      nextBreakAt = totalDailyUsage + nextPromptGapMin;
+      log(`Break prompt shown (next in ${nextPromptGapMin} min)`);
       el('msg').textContent=msg;
       el('overlay').style.display='grid';
       const btn=el('continue');
@@ -326,7 +329,6 @@
       const threshold = Number(th.value);
       if(monitor && nextBreakAt>0 && totalDailyUsage >= nextBreakAt && el('overlay').style.display!=='grid' && Date.now()>=snoozeUntil){
         triggerIntervention(`You’ve been scrolling for ${totalDailyUsage} minutes.`);
-        nextBreakAt += threshold;
       }
     }
 
@@ -368,7 +370,6 @@
       if(!monitor){ alert('Background monitor is not running. Finish setup first.'); return; }
       if(totalDailyUsage >= nextBreakAt && Date.now() >= snoozeUntil){
         triggerIntervention(`You’ve been scrolling for ${totalDailyUsage} minutes.`);
-        nextBreakAt += Number(th.value);
         renderSnapshot();
       } else {
         alert('No intervention required right now.');
@@ -398,6 +399,7 @@
         totalDailyUsage,
         pendingIntervention,
         nextBreakAt,
+        nextPromptGapMin,
         aiThreshold:Number(el('aiTh').textContent),
         metrics
       };
@@ -431,6 +433,7 @@
         if(p.totalDailyUsage!==undefined) totalDailyUsage=p.totalDailyUsage;
         if(p.pendingIntervention!==undefined) pendingIntervention=p.pendingIntervention;
         if(p.nextBreakAt!==undefined) nextBreakAt=p.nextBreakAt;
+        if(p.nextPromptGapMin!==undefined) nextPromptGapMin=p.nextPromptGapMin;
         if(p.metrics) metrics=p.metrics;
       }catch{}
     }
@@ -487,20 +490,30 @@
             <label>Threshold: <b><span id="wizThLabel">${th.value}</span> min</b></label>
             <input id="wizTh" type="range" min="10" max="120" step="5" value="${th.value}" />
           </div>
-          <div class="row">
+          <div class="row" style="margin-bottom:8px">
             <span>Speed:</span>
             <select id="wizSpeed">
               <option value="realtime" ${speedMode.value==='realtime'?'selected':''}>Realtime (60s = +1 min)</option>
               <option value="demo" ${speedMode.value==='demo'?'selected':''}>Demo (1s = +1 min)</option>
             </select>
+          </div>
+          <div class="row">
+            <span>Next break prompt delay:</span>
+            <select id="wizGap">
+              <option value="5" ${nextPromptGapMin===5?'selected':''}>5 min</option>
+              <option value="10" ${nextPromptGapMin===10?'selected':''}>10 min</option>
+              <option value="15" ${nextPromptGapMin===15?'selected':''}>15 min</option>
+              <option value="20" ${nextPromptGapMin===20?'selected':''}>20 min</option>
+            </select>
           </div>`;
         document.getElementById('wizTh').oninput=(e)=>{ th.value=e.target.value; document.getElementById('wizThLabel').textContent=e.target.value; render(); };
         document.getElementById('wizSpeed').onchange=(e)=>{ speedMode.value=e.target.value; };
+        document.getElementById('wizGap').onchange=(e)=>{ nextPromptGapMin=Number(e.target.value); };
       } else {
         wizDesc.textContent='Step 3/3: Confirm and run in background.';
         wizTips.textContent='After finish, monitoring runs silently and only triggers at limit.';
         wizNext.textContent='Finish';
-        wizStage.innerHTML = `<div>Apps: <b>${[...selected].join(', ')||'-'}</b><br/>Threshold: <b>${th.value} min</b><br/>Speed: <b>${speedMode.value}</b></div>`;
+        wizStage.innerHTML = `<div>Apps: <b>${[...selected].join(', ')||'-'}</b><br/>Threshold: <b>${th.value} min</b><br/>Speed: <b>${speedMode.value}</b><br/>Next prompt delay: <b>${nextPromptGapMin} min</b></div>`;
       }
     }
     wizNext.onclick=()=>{
