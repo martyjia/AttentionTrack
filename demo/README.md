@@ -7,15 +7,22 @@ python3 -m http.server 8080
 ```
 Open: http://localhost:8080
 
-## What this demo shows
-- App selection + daily threshold
-- AI-adjusted threshold stub (`aiAdjustedThreshold`)
-- Friction states: none / slowDown / grayscale
-- 10-second mandatory breathing gate
-- Simple metrics for hackathon judging
+Pages:
+- `index.html` → iOS-style polished visual demo
+- `mvp.html` → MVP behavior demo (monitor → trigger → intervention → metrics/log/snapshot)
 
-## Suggested 90-second demo script
-1. Start at low usage → open app normally.
-2. Increase usage to 80% threshold → show slowDown + breathing gate.
-3. Increase usage above threshold → grayscale + gate.
-4. Show "intercepted opens" and "minutes prevented" metrics.
+## What MVP demo (`mvp.html`) shows
+- App selection + daily threshold
+- AI-adjusted threshold stub (`aiThreshold`)
+- Background monitoring (silent by default)
+- Friction states: none / slowDown / grayscale
+- 10-second mandatory breathing gate at threshold
+- Metrics: triggered interventions, completion rate, estimated minutes prevented
+- Evidence layer: intervention log + snapshot save/restore (localStorage)
+
+## Suggested 90-second MVP script
+1. Start monitor with low usage (no interruption).
+2. Let usage rise near threshold (slowDown state, still silent).
+3. Cross threshold (grayscale + breathing gate appears).
+4. Complete gate and show metric/log updates.
+5. Save snapshot to show persistent daily evidence.
