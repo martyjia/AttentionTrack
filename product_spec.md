@@ -12,6 +12,7 @@ The product must counter this by detecting distraction early and helping users r
 
 3. Primary User Flow
 - User engages with a digital environment (scrolling, browsing, or repetitive engagement).
+- Add initial distraction detection placeholder screen
 - System detects prolonged or repetitive scrolling behavior.
 - System triggers a gentle interruption prompt.
 - User chooses to refocus, snooze, or ignore.
@@ -22,6 +23,7 @@ The product must counter this by detecting distraction early and helping users r
 These features define the minimum functionality required. prelint will validate PRs against these.
 
 4.1 Distraction Detection (Simulated or Real)
+- 
 - Detects continuous scrolling or repetitive engagement behavior.
 - Trigger threshold is configurable (default: 10–12 minutes).
 - Detection may be simulated for prototype purposes.
