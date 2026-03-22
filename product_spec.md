@@ -45,7 +45,7 @@ These features define the minimum functionality required. prelint will validate 
 - Read
 - Relax
 - Connect with someone
-- Something else
+- Music class
 - Selection must be stored for session context.
 
 4.4 Attention Dashboard
