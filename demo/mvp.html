@@ -79,7 +79,13 @@
           <button class="btn ghost" id="reset">Reset day</button>
           <button class="btn ghost" id="save">Save snapshot</button>
         </div>
-        <div class="small" style="margin-top:8px">Demo speed: monitor ON 时每秒 +1 分钟 usage。</div>
+        <div class="row small" style="margin-top:8px">
+          <span>Monitor speed:</span>
+          <select id="speedMode">
+            <option value="realtime" selected>Realtime (60s = +1 min)</option>
+            <option value="demo">Demo (5s = +1 min)</option>
+          </select>
+        </div>
       </section>
 
       <section class="card">
@@ -121,8 +127,10 @@
     let monitor=false, monitorTimer=null, gateTimer=null;
     let metrics={inter:0,breath:0,saved:0};
 
+    const SPEED_MS={ realtime:60000, demo:5000 };
+
     const el=id=>document.getElementById(id);
-    const appsEl=el('apps'), th=el('th'), usage=el('usage'), feed=el('feed');
+    const appsEl=el('apps'), th=el('th'), usage=el('usage'), feed=el('feed'), speedMode=el('speedMode');
 
     for(let i=0;i<11;i++){ const p=document.createElement('div'); p.className='post'; feed.appendChild(p); }
 
@@ -203,11 +211,14 @@
     el('start').onclick=()=>{
       if(monitor) return;
       if(selected.size===0){ alert('Select at least one app'); return; }
-      monitor=true; log('Background monitor started');
+      monitor=true;
+      const mode=speedMode.value||'realtime';
+      const tick=SPEED_MS[mode]||SPEED_MS.realtime;
+      log(`Background monitor started (${mode}, ${tick/1000}s = +1 min)`);
       monitorTimer=setInterval(()=>{
         usage.value=Math.min(Number(usage.max), Number(usage.value)+1);
         render();
-      },1000);
+      },tick);
     };
 
     el('stop').onclick=()=>{ monitor=false; clearInterval(monitorTimer); log('Background monitor stopped'); };
