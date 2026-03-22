@@ -77,7 +77,7 @@
           </div>
         </div>
 
-        <div class="row">
+        <div class="row" id="runtimeBlock">
           <label>Cycle Usage <b><span id="usageLabel">0</span> min</b></label>
           <input id="usage" type="range" min="0" max="240" step="1" value="0" />
           <button class="btn ghost" id="add5">+5 min</button>
@@ -171,7 +171,7 @@
 
     const el=id=>document.getElementById(id);
     const appsEl=el('apps'), th=el('th'), usage=el('usage'), feed=el('feed'), speedMode=el('speedMode'), strictBg=el('strictBg'), stateRow=el('stateRow');
-    const setupAppsBlock=el('setupAppsBlock'), setupThresholdBlock=el('setupThresholdBlock');
+    const setupAppsBlock=el('setupAppsBlock'), setupThresholdBlock=el('setupThresholdBlock'), runtimeBlock=el('runtimeBlock');
     const svcDot=el('svcDot'), svcText=el('svcText'), svcMode=el('svcMode'), svcLast=el('svcLast');
     const wizard=el('wizard'), wizDesc=el('wizDesc'), wizTips=el('wizTips'), wizNext=el('wizNext'), wizStage=el('wizStage');
 
@@ -282,7 +282,7 @@
 
     el('start').onclick=startMonitor;
 
-    el('stop').onclick=()=>{ monitor=false; clearInterval(monitorTimer); [th, speedMode].forEach(x=>x.disabled=false); stateRow.style.display='flex'; setService(false); log('Background monitor stopped'); };
+    el('stop').onclick=()=>{ monitor=false; clearInterval(monitorTimer); [th, speedMode].forEach(x=>x.disabled=false); stateRow.style.display='flex'; runtimeBlock.style.display='flex'; setService(false); log('Background monitor stopped'); };
     el('add5').onclick=()=>{ incrementUsage(5); };
     el('openProtected').onclick=()=>{
       if(!monitor){ alert('Background monitor is not running. Finish setup first.'); return; }
@@ -299,6 +299,7 @@
       monitor=false; clearInterval(monitorTimer); clearInterval(gateTimer);
       [th, speedMode].forEach(x=>x.disabled=false);
       stateRow.style.display='flex';
+      runtimeBlock.style.display='flex';
       setService(false);
       wizard.style.display='grid';
       wizStep=1;
@@ -362,9 +363,10 @@
       const mode=speedMode.value||'realtime';
       const tick=SPEED_MS[mode]||SPEED_MS.realtime;
       [th, speedMode].forEach(x=>x.disabled=true);
-      // setup done -> hide setup controls, keep only runtime controls
+      // setup done -> enter background mode: hide setup + manual runtime controls
       setupAppsBlock.style.display='none';
       setupThresholdBlock.style.display='none';
+      runtimeBlock.style.display='none';
       setService(true, mode);
       log(`Setup completed. Background monitor started (${mode}, ${tick/1000}s = +1 min)`);
       monitorTimer=setInterval(()=>{
@@ -433,6 +435,7 @@
     // setup happens in wizard; keep inline setup panes hidden
     setupAppsBlock.style.display='none';
     setupThresholdBlock.style.display='none';
+    runtimeBlock.style.display='none';
     setService(false);
     renderWizard();
     renderApps(); renderMetrics(); render();
