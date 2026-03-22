@@ -72,7 +72,7 @@
             <span>Monitor speed:</span>
             <select id="speedMode">
               <option value="realtime" selected>Realtime (60s = +1 min)</option>
-              <option value="demo">Demo (5s = +1 min)</option>
+              <option value="demo">Demo (1s = +1 min)</option>
             </select>
           </div>
         </div>
@@ -172,7 +172,7 @@
     let monitorElapsedSec = 0;
     let nextBreakAt = 0;
 
-    const SPEED_MS={ realtime:60000, demo:5000 };
+    const SPEED_MS={ realtime:60000, demo:1000 };
 
     const el=id=>document.getElementById(id);
     const appsEl=el('apps'), th=el('th'), usage=el('usage'), feed=el('feed'), speedMode=el('speedMode'), strictBg=el('strictBg'), stateRow=el('stateRow');
@@ -432,7 +432,7 @@
             <span>Speed:</span>
             <select id="wizSpeed">
               <option value="realtime" ${speedMode.value==='realtime'?'selected':''}>Realtime (60s = +1 min)</option>
-              <option value="demo" ${speedMode.value==='demo'?'selected':''}>Demo (5s = +1 min)</option>
+              <option value="demo" ${speedMode.value==='demo'?'selected':''}>Demo (1s = +1 min)</option>
             </select>
           </div>`;
         document.getElementById('wizTh').oninput=(e)=>{ th.value=e.target.value; document.getElementById('wizThLabel').textContent=e.target.value; render(); };
