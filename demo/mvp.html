@@ -147,14 +147,15 @@
 
   <div id="overlay" class="overlay">
     <div class="sheet">
-      <h3 style="margin:2px 0">Breathe First</h3>
-      <div class="small">Take 10 seconds before continuing.</div>
+      <h3 style="margin:2px 0">Pause & Check In</h3>
+      <div class="small">A gentle nudge to help you choose intentionally.</div>
       <div class="orb"></div>
       <div id="count" class="count">10</div>
-      <div id="msg" class="small" style="margin-bottom:10px">You've hit your mindful limit.</div>
+      <div id="msg" class="small" style="margin-bottom:10px">You’ve been scrolling for 30 minutes.</div>
       <div class="row" style="justify-content:center">
-        <button id="continue" class="btn primary" disabled>I'm ready to continue</button>
-        <button id="bypass" class="btn secondary" disabled>Bypass</button>
+        <button id="continue" class="btn primary" disabled>Refocus now</button>
+        <button id="remind" class="btn secondary" disabled>Remind me in 5 minutes</button>
+        <button id="ignore" class="btn ghost" disabled>Ignore</button>
       </div>
     </div>
   </div>
@@ -169,16 +170,16 @@
     let pendingIntervention = false;
     let pendingSince = 0;
     let monitorElapsedSec = 0;
+    let nextBreakAt = 0;
 
     const SPEED_MS={ realtime:60000, demo:5000 };
-    const AUTO_OPEN_AFTER_MS = 3000; // simulate next protected app open after limit hit
 
     const el=id=>document.getElementById(id);
     const appsEl=el('apps'), th=el('th'), usage=el('usage'), feed=el('feed'), speedMode=el('speedMode'), strictBg=el('strictBg'), stateRow=el('stateRow');
     const setupAppsBlock=el('setupAppsBlock'), setupThresholdBlock=el('setupThresholdBlock'), runtimeBlock=el('runtimeBlock');
     const svcDot=el('svcDot'), svcText=el('svcText'), svcMode=el('svcMode'), svcLast=el('svcLast'), svcTimer=el('svcTimer');
     const wizard=el('wizard'), wizDesc=el('wizDesc'), wizTips=el('wizTips'), wizNext=el('wizNext'), wizStage=el('wizStage');
-    const bypassBtn=el('bypass');
+    const remindBtn=el('remind'), ignoreBtn=el('ignore');
 
     for(let i=0;i<11;i++){ const p=document.createElement('div'); p.className='post'; feed.appendChild(p); }
 
@@ -252,28 +253,22 @@
 
     function triggerIntervention(msg){
       metrics.inter++; renderMetrics();
-      log('Intervention opened on protected app launch');
+      log('Break prompt shown');
       el('msg').textContent=msg;
       el('overlay').style.display='grid';
-      const btn=el('continue'); btn.disabled=true;
-      bypassBtn.disabled=true;
+      const btn=el('continue');
+      btn.disabled=true; remindBtn.disabled=true; ignoreBtn.disabled=true;
       let t=10; el('count').textContent=t;
       clearInterval(gateTimer);
       gateTimer=setInterval(()=>{
         t--; el('count').textContent=t;
-        if(t<=0){ clearInterval(gateTimer); btn.disabled=false; bypassBtn.disabled=false; }
+        if(t<=0){
+          clearInterval(gateTimer);
+          btn.disabled=false;
+          remindBtn.disabled=false;
+          ignoreBtn.disabled=false;
+        }
       },1000);
-    }
-
-    function maybeMarkLimitReached(){
-      const base=Number(th.value), u=Number(usage.value), ai=aiThreshold(base,u), st=stateFor(u,ai);
-      if(monitor && !pendingIntervention && st.k==='gray'){
-        pendingIntervention = true;
-        pendingSince = Date.now();
-        usage.value = 0; // reset cycle counter after hit
-        log('Limit hit: cycle reset, waiting for next protected app open');
-        render();
-      }
     }
 
     function incrementUsage(mins){
@@ -281,22 +276,31 @@
       totalDailyUsage += mins;
       renderMetrics();
       render();
-      maybeMarkLimitReached();
+      const threshold = Number(th.value);
+      if(monitor && nextBreakAt>0 && totalDailyUsage >= nextBreakAt && el('overlay').style.display!=='grid' && Date.now()>=snoozeUntil){
+        triggerIntervention(`You’ve been scrolling for ${totalDailyUsage} minutes.`);
+        nextBreakAt += threshold;
+      }
     }
 
     el('continue').onclick=()=>{
+      if(el('continue').disabled) return;
       el('overlay').style.display='none';
       metrics.breath++; metrics.saved+=3; renderMetrics();
-      // prevent immediate re-trigger while usage is still above threshold
-      snoozeUntil = Date.now() + 5 * 60 * 1000;
-      log('Breathing gate completed (snoozed 5m)');
+      log('Refocus selected');
     };
 
-    bypassBtn.onclick=()=>{
-      if(bypassBtn.disabled) return;
+    remindBtn.onclick=()=>{
+      if(remindBtn.disabled) return;
       el('overlay').style.display='none';
       snoozeUntil = Date.now() + 5 * 60 * 1000;
-      log('Break bypassed (snoozed 5m)');
+      log('Remind me in 5 minutes selected');
+    };
+
+    ignoreBtn.onclick=()=>{
+      if(ignoreBtn.disabled) return;
+      el('overlay').style.display='none';
+      log('Ignore selected');
     };
 
     el('start').onclick=startMonitor;
@@ -305,10 +309,9 @@
     el('add5').onclick=()=>{ incrementUsage(5); };
     el('openProtected').onclick=()=>{
       if(!monitor){ alert('Background monitor is not running. Finish setup first.'); return; }
-      if(pendingIntervention && Date.now() >= snoozeUntil){
-        pendingIntervention = false;
-        pendingSince = 0;
-        triggerIntervention('Daily limit reached. Take a 10-second breathing break.');
+      if(totalDailyUsage >= nextBreakAt && Date.now() >= snoozeUntil){
+        triggerIntervention(`You’ve been scrolling for ${totalDailyUsage} minutes.`);
+        nextBreakAt += Number(th.value);
         renderSnapshot();
       } else {
         alert('No intervention required right now.');
@@ -324,7 +327,7 @@
       wizStep=1;
       renderWizard();
       usage.value=0; metrics={inter:0,breath:0,saved:0};
-      totalDailyUsage=0; pendingIntervention=false; pendingSince=0;
+      totalDailyUsage=0; pendingIntervention=false; pendingSince=0; nextBreakAt=0;
       el('overlay').style.display='none'; el('log').innerHTML='';
       renderMetrics(); render(); log('Day reset');
     };
@@ -337,6 +340,7 @@
         usage:Number(usage.value),
         totalDailyUsage,
         pendingIntervention,
+        nextBreakAt,
         aiThreshold:Number(el('aiTh').textContent),
         metrics
       };
@@ -348,16 +352,12 @@
     th.oninput=render;
     usage.oninput=()=>{
       render();
-      const base=Number(th.value), u=Number(usage.value), ai=aiThreshold(base,u), st=stateFor(u,ai);
-      // Hard rule: manual drag over threshold should ALWAYS show break page immediately
-      if(st.k==='gray' && el('overlay').style.display!=='grid'){
-        pendingIntervention=false;
-        pendingSince=0;
-        snoozeUntil=0;
-        triggerIntervention('Daily limit reached. Take a 10-second breathing break.');
+      const threshold = Number(th.value);
+      const u = Number(usage.value);
+      if(u >= threshold && el('overlay').style.display!=='grid'){
+        triggerIntervention(`You’ve been scrolling for ${u} minutes.`);
+        if(nextBreakAt <= u) nextBreakAt = u + threshold;
         renderSnapshot();
-      } else {
-        maybeMarkLimitReached();
       }
     };
 
@@ -371,6 +371,7 @@
         if(p.usage!==undefined) usage.value=p.usage;
         if(p.totalDailyUsage!==undefined) totalDailyUsage=p.totalDailyUsage;
         if(p.pendingIntervention!==undefined) pendingIntervention=p.pendingIntervention;
+        if(p.nextBreakAt!==undefined) nextBreakAt=p.nextBreakAt;
         if(p.metrics) metrics=p.metrics;
       }catch{}
     }
@@ -382,6 +383,7 @@
       const mode=speedMode.value||'realtime';
       const tick=SPEED_MS[mode]||SPEED_MS.realtime;
       [th, speedMode].forEach(x=>x.disabled=true);
+      nextBreakAt = Number(th.value);
       // setup done -> enter background mode: hide setup + manual runtime controls
       setupAppsBlock.style.display='none';
       setupThresholdBlock.style.display='none';
@@ -391,11 +393,6 @@
       // usage accumulation cadence (minute-equivalent)
       monitorTimer=setInterval(()=>{
         incrementUsage(1);
-        if(pendingIntervention && Date.now() >= snoozeUntil && (Date.now() - pendingSince) >= AUTO_OPEN_AFTER_MS && el('overlay').style.display!=='grid'){
-          pendingIntervention = false;
-          triggerIntervention('Daily limit reached. Take a 10-second breathing break.');
-          renderSnapshot();
-        }
       },tick);
       // UI timer heartbeat (every second)
       clearInterval(uiTimer);
