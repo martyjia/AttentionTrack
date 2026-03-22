@@ -65,9 +65,10 @@
           <span class="small">AI-adjusted: <b><span id="aiTh">30</span> min</b></span>
         </div>
         <div class="row">
-          <label>Usage <b><span id="usageLabel">0</span> min</b></label>
+          <label>Cycle Usage <b><span id="usageLabel">0</span> min</b></label>
           <input id="usage" type="range" min="0" max="240" step="1" value="0" />
           <button class="btn ghost" id="add5">+5 min</button>
+          <button class="btn ghost" id="openProtected">Open protected app</button>
         </div>
 
         <div class="row" id="stateRow" style="margin-top:8px">
@@ -107,6 +108,7 @@
         <div class="small">Breathing Completed</div><div id="mBreath" class="kpi">0</div>
         <div class="small">Mindless Minutes Prevented (est.)</div><div id="mSaved" class="kpi">0 min</div>
         <div class="small">Completion Rate</div><div id="mRate" class="kpi">0%</div>
+        <div class="small">Total Daily Usage Tracked</div><div id="mTotal" class="kpi">0 min</div>
 
         <h4>Intervention Log</h4>
         <ul id="log" class="log"></ul>
@@ -116,7 +118,9 @@
           <tr><td>Protected apps</td><td id="sApps">-</td></tr>
           <tr><td>Base threshold</td><td id="sBase">-</td></tr>
           <tr><td>AI threshold (current)</td><td id="sAi">-</td></tr>
-          <tr><td>Current usage</td><td id="sUsage">-</td></tr>
+          <tr><td>Current cycle usage</td><td id="sUsage">-</td></tr>
+          <tr><td>Total daily usage</td><td id="sTotal">-</td></tr>
+          <tr><td>Pending intervention</td><td id="sPending">NO</td></tr>
           <tr><td>Current state</td><td id="sState">-</td></tr>
         </table>
       </section>
@@ -151,6 +155,8 @@
     let monitor=false, monitorTimer=null, gateTimer=null;
     let metrics={inter:0,breath:0,saved:0};
     let snoozeUntil = 0;
+    let totalDailyUsage = 0;
+    let pendingIntervention = false;
 
     const SPEED_MS={ realtime:60000, demo:5000 };
 
@@ -198,6 +204,7 @@
       el('mSaved').textContent=metrics.saved+' min';
       const rate=metrics.inter?Math.round((metrics.breath/metrics.inter)*100):0;
       el('mRate').textContent=rate+'%';
+      el('mTotal').textContent=totalDailyUsage+' min';
     }
 
     function renderSnapshot(){
@@ -206,6 +213,8 @@
       el('sBase').textContent=base+' min';
       el('sAi').textContent=ai+' min';
       el('sUsage').textContent=u+' min';
+      el('sTotal').textContent=totalDailyUsage+' min';
+      el('sPending').textContent=pendingIntervention?'YES':'NO';
       el('sState').textContent=st.k.toUpperCase();
     }
 
@@ -218,12 +227,11 @@
       feed.style.filter=st.k==='gray'?'grayscale(1)':'grayscale(0)';
       stateRow.style.display = (monitor && strictBg.checked) ? 'none' : 'flex';
       renderSnapshot();
-      if(monitor && st.k==='gray' && el('overlay').style.display!=='grid' && Date.now() >= snoozeUntil) triggerIntervention(st.msg);
     }
 
     function triggerIntervention(msg){
       metrics.inter++; renderMetrics();
-      log('Intervention triggered at threshold');
+      log('Intervention opened on protected app launch');
       el('msg').textContent=msg;
       el('overlay').style.display='grid';
       const btn=el('continue'); btn.disabled=true;
@@ -233,6 +241,24 @@
         t--; el('count').textContent=t;
         if(t<=0){ clearInterval(gateTimer); btn.disabled=false; }
       },1000);
+    }
+
+    function maybeMarkLimitReached(){
+      const base=Number(th.value), u=Number(usage.value), ai=aiThreshold(base,u), st=stateFor(u,ai);
+      if(monitor && !pendingIntervention && st.k==='gray'){
+        pendingIntervention = true;
+        usage.value = 0; // reset cycle counter after hit
+        log('Limit hit: cycle reset, waiting for next protected app open');
+        render();
+      }
+    }
+
+    function incrementUsage(mins){
+      usage.value=Math.min(Number(usage.max), Number(usage.value)+mins);
+      totalDailyUsage += mins;
+      renderMetrics();
+      render();
+      maybeMarkLimitReached();
     }
 
     el('continue').onclick=()=>{
@@ -246,13 +272,24 @@
     el('start').onclick=startMonitor;
 
     el('stop').onclick=()=>{ monitor=false; clearInterval(monitorTimer); [th, speedMode].forEach(x=>x.disabled=false); stateRow.style.display='flex'; setService(false); log('Background monitor stopped'); };
-    el('add5').onclick=()=>{ usage.value=Math.min(Number(usage.max), Number(usage.value)+5); render(); };
+    el('add5').onclick=()=>{ incrementUsage(5); };
+    el('openProtected').onclick=()=>{
+      if(!monitor){ alert('Background monitor is not running. Finish setup first.'); return; }
+      if(pendingIntervention && Date.now() >= snoozeUntil){
+        pendingIntervention = false;
+        triggerIntervention('Daily limit reached. Take a 10-second breathing break.');
+        renderSnapshot();
+      } else {
+        alert('No intervention required right now.');
+      }
+    };
     el('reset').onclick=()=>{
       monitor=false; clearInterval(monitorTimer); clearInterval(gateTimer);
       [th, speedMode].forEach(x=>x.disabled=false);
       stateRow.style.display='flex';
       setService(false);
       usage.value=0; metrics={inter:0,breath:0,saved:0};
+      totalDailyUsage=0; pendingIntervention=false;
       el('overlay').style.display='none'; el('log').innerHTML='';
       renderMetrics(); render(); log('Day reset');
     };
@@ -263,6 +300,8 @@
         apps:[...selected],
         baseThreshold:Number(th.value),
         usage:Number(usage.value),
+        totalDailyUsage,
+        pendingIntervention,
         aiThreshold:Number(el('aiTh').textContent),
         metrics
       };
@@ -271,7 +310,8 @@
       alert('Snapshot saved');
     };
 
-    th.oninput=render; usage.oninput=render;
+    th.oninput=render;
+    usage.oninput=()=>{ render(); maybeMarkLimitReached(); };
 
     // restore
     const prev=localStorage.getItem('zenscroll-mvp-snapshot');
@@ -281,6 +321,8 @@
         if(Array.isArray(p.apps)){ selected.clear(); p.apps.forEach(a=>selected.add(a)); }
         if(p.baseThreshold) th.value=p.baseThreshold;
         if(p.usage!==undefined) usage.value=p.usage;
+        if(p.totalDailyUsage!==undefined) totalDailyUsage=p.totalDailyUsage;
+        if(p.pendingIntervention!==undefined) pendingIntervention=p.pendingIntervention;
         if(p.metrics) metrics=p.metrics;
       }catch{}
     }
@@ -295,8 +337,7 @@
       setService(true, mode);
       log(`Setup completed. Background monitor started (${mode}, ${tick/1000}s = +1 min)`);
       monitorTimer=setInterval(()=>{
-        usage.value=Math.min(Number(usage.max), Number(usage.value)+1);
-        render();
+        incrementUsage(1);
       },tick);
       render();
     }
