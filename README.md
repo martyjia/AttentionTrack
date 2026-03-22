@@ -95,10 +95,4 @@ product_spec.md
 
 in your GitHub repo.
 
-If you want, I can now walk you through:
-- How to create the GitHub repo
-- How to add this spec
-- How to enable prelint
-- How to create your first PR
-- What to show judges during the demo
-Just tell me what you want next.
+Please document all product decisions in md files. 
