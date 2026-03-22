@@ -329,10 +329,11 @@
     usage.oninput=()=>{
       render();
       const base=Number(th.value), u=Number(usage.value), ai=aiThreshold(base,u), st=stateFor(u,ai);
-      // Manual drag behavior: crossing threshold should pop break page immediately
-      if(monitor && st.k==='gray' && el('overlay').style.display!=='grid' && Date.now()>=snoozeUntil){
+      // Hard rule: manual drag over threshold should ALWAYS show break page immediately
+      if(st.k==='gray' && el('overlay').style.display!=='grid'){
         pendingIntervention=false;
         pendingSince=0;
+        snoozeUntil=0;
         triggerIntervention('Daily limit reached. Take a 10-second breathing break.');
         renderSnapshot();
       } else {
