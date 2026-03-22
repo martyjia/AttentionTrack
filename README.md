@@ -88,11 +88,5 @@ These are optional ideas for later versions:
 - Long‑term habit formation analytics
 - Integration with productivity tools
 
-✔️ This spec is ready for prelint.
-Just paste it into:
-product_spec.md
-
-
-in your GitHub repo.
 
 Please document all product decisions in md files. 
