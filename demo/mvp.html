@@ -152,7 +152,10 @@
       <div class="orb"></div>
       <div id="count" class="count">10</div>
       <div id="msg" class="small" style="margin-bottom:10px">You've hit your mindful limit.</div>
-      <button id="continue" class="btn primary" disabled>I'm ready to continue</button>
+      <div class="row" style="justify-content:center">
+        <button id="continue" class="btn primary" disabled>I'm ready to continue</button>
+        <button id="bypass" class="btn secondary" disabled>Bypass</button>
+      </div>
     </div>
   </div>
 
@@ -175,6 +178,7 @@
     const setupAppsBlock=el('setupAppsBlock'), setupThresholdBlock=el('setupThresholdBlock'), runtimeBlock=el('runtimeBlock');
     const svcDot=el('svcDot'), svcText=el('svcText'), svcMode=el('svcMode'), svcLast=el('svcLast'), svcTimer=el('svcTimer');
     const wizard=el('wizard'), wizDesc=el('wizDesc'), wizTips=el('wizTips'), wizNext=el('wizNext'), wizStage=el('wizStage');
+    const bypassBtn=el('bypass');
 
     for(let i=0;i<11;i++){ const p=document.createElement('div'); p.className='post'; feed.appendChild(p); }
 
@@ -252,11 +256,12 @@
       el('msg').textContent=msg;
       el('overlay').style.display='grid';
       const btn=el('continue'); btn.disabled=true;
+      bypassBtn.disabled=true;
       let t=10; el('count').textContent=t;
       clearInterval(gateTimer);
       gateTimer=setInterval(()=>{
         t--; el('count').textContent=t;
-        if(t<=0){ clearInterval(gateTimer); btn.disabled=false; }
+        if(t<=0){ clearInterval(gateTimer); btn.disabled=false; bypassBtn.disabled=false; }
       },1000);
     }
 
@@ -285,6 +290,13 @@
       // prevent immediate re-trigger while usage is still above threshold
       snoozeUntil = Date.now() + 5 * 60 * 1000;
       log('Breathing gate completed (snoozed 5m)');
+    };
+
+    bypassBtn.onclick=()=>{
+      if(bypassBtn.disabled) return;
+      el('overlay').style.display='none';
+      snoozeUntil = Date.now() + 5 * 60 * 1000;
+      log('Break bypassed (snoozed 5m)');
     };
 
     el('start').onclick=startMonitor;
