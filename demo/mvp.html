@@ -150,6 +150,7 @@
     const selected=new Set(["TikTok","Instagram"]);
     let monitor=false, monitorTimer=null, gateTimer=null;
     let metrics={inter:0,breath:0,saved:0};
+    let snoozeUntil = 0;
 
     const SPEED_MS={ realtime:60000, demo:5000 };
 
@@ -217,7 +218,7 @@
       feed.style.filter=st.k==='gray'?'grayscale(1)':'grayscale(0)';
       stateRow.style.display = (monitor && strictBg.checked) ? 'none' : 'flex';
       renderSnapshot();
-      if(monitor && st.k==='gray' && el('overlay').style.display!=='grid') triggerIntervention(st.msg);
+      if(monitor && st.k==='gray' && el('overlay').style.display!=='grid' && Date.now() >= snoozeUntil) triggerIntervention(st.msg);
     }
 
     function triggerIntervention(msg){
@@ -237,7 +238,9 @@
     el('continue').onclick=()=>{
       el('overlay').style.display='none';
       metrics.breath++; metrics.saved+=3; renderMetrics();
-      log('Breathing gate completed');
+      // prevent immediate re-trigger while usage is still above threshold
+      snoozeUntil = Date.now() + 5 * 60 * 1000;
+      log('Breathing gate completed (snoozed 5m)');
     };
 
     el('start').onclick=startMonitor;
