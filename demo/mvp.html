@@ -164,8 +164,10 @@
     let snoozeUntil = 0;
     let totalDailyUsage = 0;
     let pendingIntervention = false;
+    let pendingSince = 0;
 
     const SPEED_MS={ realtime:60000, demo:5000 };
+    const AUTO_OPEN_AFTER_MS = 3000; // simulate next protected app open after limit hit
 
     const el=id=>document.getElementById(id);
     const appsEl=el('apps'), th=el('th'), usage=el('usage'), feed=el('feed'), speedMode=el('speedMode'), strictBg=el('strictBg'), stateRow=el('stateRow');
@@ -255,6 +257,7 @@
       const base=Number(th.value), u=Number(usage.value), ai=aiThreshold(base,u), st=stateFor(u,ai);
       if(monitor && !pendingIntervention && st.k==='gray'){
         pendingIntervention = true;
+        pendingSince = Date.now();
         usage.value = 0; // reset cycle counter after hit
         log('Limit hit: cycle reset, waiting for next protected app open');
         render();
@@ -285,6 +288,7 @@
       if(!monitor){ alert('Background monitor is not running. Finish setup first.'); return; }
       if(pendingIntervention && Date.now() >= snoozeUntil){
         pendingIntervention = false;
+        pendingSince = 0;
         triggerIntervention('Daily limit reached. Take a 10-second breathing break.');
         renderSnapshot();
       } else {
@@ -300,7 +304,7 @@
       wizStep=1;
       renderWizard();
       usage.value=0; metrics={inter:0,breath:0,saved:0};
-      totalDailyUsage=0; pendingIntervention=false;
+      totalDailyUsage=0; pendingIntervention=false; pendingSince=0;
       el('overlay').style.display='none'; el('log').innerHTML='';
       renderMetrics(); render(); log('Day reset');
     };
@@ -352,6 +356,11 @@
       log(`Setup completed. Background monitor started (${mode}, ${tick/1000}s = +1 min)`);
       monitorTimer=setInterval(()=>{
         incrementUsage(1);
+        if(pendingIntervention && Date.now() >= snoozeUntil && (Date.now() - pendingSince) >= AUTO_OPEN_AFTER_MS && el('overlay').style.display!=='grid'){
+          pendingIntervention = false;
+          triggerIntervention('Daily limit reached. Take a 10-second breathing break.');
+          renderSnapshot();
+        }
       },tick);
       render();
     }
