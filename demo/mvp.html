@@ -159,7 +159,7 @@
   <script>
     const appNames=["TikTok","Instagram","YouTube","X","Rednote"];
     const selected=new Set(["TikTok","Instagram"]);
-    let monitor=false, monitorTimer=null, gateTimer=null;
+    let monitor=false, monitorTimer=null, uiTimer=null, gateTimer=null;
     let metrics={inter:0,breath:0,saved:0};
     let snoozeUntil = 0;
     let totalDailyUsage = 0;
@@ -289,7 +289,7 @@
 
     el('start').onclick=startMonitor;
 
-    el('stop').onclick=()=>{ monitor=false; clearInterval(monitorTimer); [th, speedMode].forEach(x=>x.disabled=false); stateRow.style.display='flex'; runtimeBlock.style.display='flex'; setService(false); log('Background monitor stopped'); };
+    el('stop').onclick=()=>{ monitor=false; clearInterval(monitorTimer); clearInterval(uiTimer); [th, speedMode].forEach(x=>x.disabled=false); stateRow.style.display='flex'; runtimeBlock.style.display='flex'; setService(false); log('Background monitor stopped'); };
     el('add5').onclick=()=>{ incrementUsage(5); };
     el('openProtected').onclick=()=>{
       if(!monitor){ alert('Background monitor is not running. Finish setup first.'); return; }
@@ -303,7 +303,7 @@
       }
     };
     el('reset').onclick=()=>{
-      monitor=false; clearInterval(monitorTimer); clearInterval(gateTimer);
+      monitor=false; clearInterval(monitorTimer); clearInterval(uiTimer); clearInterval(gateTimer);
       [th, speedMode].forEach(x=>x.disabled=false);
       stateRow.style.display='flex';
       runtimeBlock.style.display='flex';
@@ -376,16 +376,21 @@
       runtimeBlock.style.display='none';
       setService(true, mode);
       log(`Setup completed. Background monitor started (${mode}, ${tick/1000}s = +1 min)`);
+      // usage accumulation cadence (minute-equivalent)
       monitorTimer=setInterval(()=>{
         incrementUsage(1);
-        monitorElapsedSec += Math.floor(tick/1000);
-        svcTimer.textContent = fmtMMSS(monitorElapsedSec);
         if(pendingIntervention && Date.now() >= snoozeUntil && (Date.now() - pendingSince) >= AUTO_OPEN_AFTER_MS && el('overlay').style.display!=='grid'){
           pendingIntervention = false;
           triggerIntervention('Daily limit reached. Take a 10-second breathing break.');
           renderSnapshot();
         }
       },tick);
+      // UI timer heartbeat (every second)
+      clearInterval(uiTimer);
+      uiTimer=setInterval(()=>{
+        monitorElapsedSec += 1;
+        svcTimer.textContent = fmtMMSS(monitorElapsedSec);
+      },1000);
       render();
     }
 
