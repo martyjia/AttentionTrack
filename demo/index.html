@@ -255,7 +255,7 @@
       <div id="frictionMsg" class="sheet-msg">You've hit your mindful limit.</div>
       <div class="sheet-actions">
         <button id="continueBtn" class="sheet-btn primary" disabled>I'm ready to continue</button>
-        <button id="dismissBtn" class="sheet-btn ghost" disabled>Not now</button>
+        <button id="dismissBtn" class="sheet-btn ghost">Not now (snooze 5m)</button>
       </div>
     </div>
   </div>
@@ -286,6 +286,7 @@
 
     let metrics={intercept:0,breath:0,saved:0};
     let gateTimer=null, bgTimer=null, bgRunning=false;
+    let snoozeUntil = 0;
 
     for(let i=0;i<11;i++){const p=document.createElement('div');p.className='post';feed.appendChild(p);}
 
@@ -332,7 +333,7 @@
       stateHint.textContent=msg;
       feed.style.filter=state==='gray'?'grayscale(1)':'grayscale(0)';
 
-      if(bgRunning && state==='gray' && overlay.style.display!=='grid') launchIntervention(msg);
+      if(bgRunning && state==='gray' && overlay.style.display!=='grid' && Date.now() >= snoozeUntil) launchIntervention(msg);
     }
 
     function launchIntervention(msg){
@@ -340,13 +341,13 @@
       frictionMsg.textContent=msg;
       overlay.style.display='grid';
       continueBtn.disabled=true;
-      dismissBtn.disabled=true;
+      dismissBtn.disabled=false;
 
       let t=10; countdown.textContent=t;
       clearInterval(gateTimer);
       gateTimer=setInterval(()=>{
         t-=1; countdown.textContent=t;
-        if(t<=0){clearInterval(gateTimer);continueBtn.disabled=false;dismissBtn.disabled=false;}
+        if(t<=0){clearInterval(gateTimer);continueBtn.disabled=false;}
       },1000);
     }
 
@@ -355,7 +356,12 @@
       metrics.breath++; metrics.saved+=3; syncMetrics();
     };
 
-    dismissBtn.onclick=()=>{ overlay.style.display='none'; };
+    dismissBtn.onclick=()=>{
+      overlay.style.display='none';
+      clearInterval(gateTimer);
+      // Snooze re-trigger for 5 minutes in demo logic
+      snoozeUntil = Date.now() + 5 * 60 * 1000;
+    };
 
     document.getElementById('bgOn').onclick=()=>{
       if(bgRunning) return;
