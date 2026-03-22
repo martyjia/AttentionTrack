@@ -137,7 +137,8 @@
     <div class="wiz-card">
       <h3 style="margin:0 0 6px">ZenScroll Setup Wizard</h3>
       <div id="wizDesc" class="small">Step 1/3: Choose apps you want to protect.</div>
-      <div id="wizTips" class="small" style="margin:10px 0 14px">Tip: include highest-risk apps first (TikTok/Instagram).</div>
+      <div id="wizTips" class="small" style="margin:10px 0 10px">Tip: include highest-risk apps first (TikTok/Instagram).</div>
+      <div id="wizStage" class="small" style="margin:8px 0 14px"></div>
       <div class="row" style="justify-content:flex-end">
         <button id="wizNext" class="btn primary">Next</button>
       </div>
@@ -170,7 +171,7 @@
     const appsEl=el('apps'), th=el('th'), usage=el('usage'), feed=el('feed'), speedMode=el('speedMode'), strictBg=el('strictBg'), stateRow=el('stateRow');
     const setupAppsBlock=el('setupAppsBlock'), setupThresholdBlock=el('setupThresholdBlock');
     const svcDot=el('svcDot'), svcText=el('svcText'), svcMode=el('svcMode'), svcLast=el('svcLast');
-    const wizard=el('wizard'), wizDesc=el('wizDesc'), wizTips=el('wizTips'), wizNext=el('wizNext');
+    const wizard=el('wizard'), wizDesc=el('wizDesc'), wizTips=el('wizTips'), wizNext=el('wizNext'), wizStage=el('wizStage');
 
     for(let i=0;i<11;i++){ const p=document.createElement('div'); p.className='post'; feed.appendChild(p); }
 
@@ -278,7 +279,7 @@
 
     el('start').onclick=startMonitor;
 
-    el('stop').onclick=()=>{ monitor=false; clearInterval(monitorTimer); [th, speedMode].forEach(x=>x.disabled=false); stateRow.style.display='flex'; setupAppsBlock.style.display='block'; setupThresholdBlock.style.display='block'; setService(false); log('Background monitor stopped'); };
+    el('stop').onclick=()=>{ monitor=false; clearInterval(monitorTimer); [th, speedMode].forEach(x=>x.disabled=false); stateRow.style.display='flex'; setService(false); log('Background monitor stopped'); };
     el('add5').onclick=()=>{ incrementUsage(5); };
     el('openProtected').onclick=()=>{
       if(!monitor){ alert('Background monitor is not running. Finish setup first.'); return; }
@@ -294,9 +295,10 @@
       monitor=false; clearInterval(monitorTimer); clearInterval(gateTimer);
       [th, speedMode].forEach(x=>x.disabled=false);
       stateRow.style.display='flex';
-      setupAppsBlock.style.display='block';
-      setupThresholdBlock.style.display='none';
       setService(false);
+      wizard.style.display='grid';
+      wizStep=1;
+      renderWizard();
       usage.value=0; metrics={inter:0,breath:0,saved:0};
       totalDailyUsage=0; pendingIntervention=false;
       el('overlay').style.display='none'; el('log').innerHTML='';
@@ -359,25 +361,44 @@
     function renderWizard(){
       if(wizStep===1){
         wizDesc.textContent='Step 1/3: Choose apps you want to protect.';
-        wizTips.textContent='Tip: include highest-risk apps first (TikTok/Instagram).';
+        wizTips.textContent='Select at least one app.';
         wizNext.textContent='Next';
-        setupAppsBlock.style.display='block';
-        setupThresholdBlock.style.display='none';
+        wizStage.innerHTML = `<div id="wizApps" class="row"></div>`;
+        const wrap = document.getElementById('wizApps');
+        appNames.forEach(n=>{
+          const b=document.createElement('button');
+          b.className='chip'+(selected.has(n)?' active':'');
+          b.textContent=n;
+          b.onclick=()=>{ selected.has(n)?selected.delete(n):selected.add(n); renderWizard(); renderApps(); renderSnapshot(); };
+          wrap.appendChild(b);
+        });
       } else if(wizStep===2){
         wizDesc.textContent='Step 2/3: Set your daily mindful threshold.';
-        wizTips.textContent='Recommended MVP default: 30 min/day.';
+        wizTips.textContent='Pick threshold and monitor speed.';
         wizNext.textContent='Next';
-        setupAppsBlock.style.display='none';
-        setupThresholdBlock.style.display='block';
+        wizStage.innerHTML = `
+          <div class="row" style="margin-bottom:8px">
+            <label>Threshold: <b><span id="wizThLabel">${th.value}</span> min</b></label>
+            <input id="wizTh" type="range" min="10" max="120" step="5" value="${th.value}" />
+          </div>
+          <div class="row">
+            <span>Speed:</span>
+            <select id="wizSpeed">
+              <option value="realtime" ${speedMode.value==='realtime'?'selected':''}>Realtime (60s = +1 min)</option>
+              <option value="demo" ${speedMode.value==='demo'?'selected':''}>Demo (5s = +1 min)</option>
+            </select>
+          </div>`;
+        document.getElementById('wizTh').oninput=(e)=>{ th.value=e.target.value; document.getElementById('wizThLabel').textContent=e.target.value; render(); };
+        document.getElementById('wizSpeed').onchange=(e)=>{ speedMode.value=e.target.value; };
       } else {
         wizDesc.textContent='Step 3/3: Confirm and run in background.';
-        wizTips.textContent='After finish, setup panels hide and monitoring runs silently.';
+        wizTips.textContent='After finish, monitoring runs silently and only triggers at limit.';
         wizNext.textContent='Finish';
-        setupAppsBlock.style.display='none';
-        setupThresholdBlock.style.display='none';
+        wizStage.innerHTML = `<div>Apps: <b>${[...selected].join(', ')||'-'}</b><br/>Threshold: <b>${th.value} min</b><br/>Speed: <b>${speedMode.value}</b></div>`;
       }
     }
     wizNext.onclick=()=>{
+      if(wizStep===1 && selected.size===0){ alert('Please select at least one app.'); return; }
       if(wizStep<3){
         wizStep++; renderWizard();
       } else {
@@ -387,6 +408,9 @@
       }
     };
 
+    // setup happens in wizard; keep inline setup panes hidden
+    setupAppsBlock.style.display='none';
+    setupThresholdBlock.style.display='none';
     setService(false);
     renderWizard();
     renderApps(); renderMetrics(); render();
