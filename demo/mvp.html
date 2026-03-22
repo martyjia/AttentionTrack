@@ -64,7 +64,7 @@
           <button class="btn ghost" id="add5">+5 min</button>
         </div>
 
-        <div class="row" style="margin-top:8px">
+        <div class="row" id="stateRow" style="margin-top:8px">
           <span>State:</span><span id="statePill" class="pill none">NONE</span>
           <span id="stateHint" class="small">No intervention</span>
         </div>
@@ -74,10 +74,13 @@
         </div>
 
         <div class="row" style="margin-top:12px">
-          <button class="btn primary" id="start">Start background monitor</button>
+          <button class="btn primary" id="start">Complete setup & run in background</button>
           <button class="btn secondary" id="stop">Stop</button>
           <button class="btn ghost" id="reset">Reset day</button>
           <button class="btn ghost" id="save">Save snapshot</button>
+        </div>
+        <div class="row small" style="margin-top:8px">
+          <label><input type="checkbox" id="strictBg" checked /> strict background mode (no UI nag before limit)</label>
         </div>
         <div class="row small" style="margin-top:8px">
           <span>Monitor speed:</span>
@@ -130,7 +133,7 @@
     const SPEED_MS={ realtime:60000, demo:5000 };
 
     const el=id=>document.getElementById(id);
-    const appsEl=el('apps'), th=el('th'), usage=el('usage'), feed=el('feed'), speedMode=el('speedMode');
+    const appsEl=el('apps'), th=el('th'), usage=el('usage'), feed=el('feed'), speedMode=el('speedMode'), strictBg=el('strictBg'), stateRow=el('stateRow');
 
     for(let i=0;i<11;i++){ const p=document.createElement('div'); p.className='post'; feed.appendChild(p); }
 
@@ -184,6 +187,7 @@
       el('statePill').textContent=st.k.toUpperCase();
       el('stateHint').textContent=st.msg;
       feed.style.filter=st.k==='gray'?'grayscale(1)':'grayscale(0)';
+      stateRow.style.display = (monitor && strictBg.checked) ? 'none' : 'flex';
       renderSnapshot();
       if(monitor && st.k==='gray' && el('overlay').style.display!=='grid') triggerIntervention(st.msg);
     }
@@ -214,17 +218,20 @@
       monitor=true;
       const mode=speedMode.value||'realtime';
       const tick=SPEED_MS[mode]||SPEED_MS.realtime;
-      log(`Background monitor started (${mode}, ${tick/1000}s = +1 min)`);
+      [th, speedMode].forEach(x=>x.disabled=true);
+      log(`Setup completed. Background monitor started (${mode}, ${tick/1000}s = +1 min)`);
       monitorTimer=setInterval(()=>{
         usage.value=Math.min(Number(usage.max), Number(usage.value)+1);
         render();
       },tick);
     };
 
-    el('stop').onclick=()=>{ monitor=false; clearInterval(monitorTimer); log('Background monitor stopped'); };
+    el('stop').onclick=()=>{ monitor=false; clearInterval(monitorTimer); [th, speedMode].forEach(x=>x.disabled=false); stateRow.style.display='flex'; log('Background monitor stopped'); };
     el('add5').onclick=()=>{ usage.value=Math.min(Number(usage.max), Number(usage.value)+5); render(); };
     el('reset').onclick=()=>{
       monitor=false; clearInterval(monitorTimer); clearInterval(gateTimer);
+      [th, speedMode].forEach(x=>x.disabled=false);
+      stateRow.style.display='flex';
       usage.value=0; metrics={inter:0,breath:0,saved:0};
       el('overlay').style.display='none'; el('log').innerHTML='';
       renderMetrics(); render(); log('Day reset');
