@@ -240,20 +240,7 @@
       log('Breathing gate completed');
     };
 
-    el('start').onclick=()=>{
-      if(monitor) return;
-      if(selected.size===0){ alert('Select at least one app'); return; }
-      monitor=true;
-      const mode=speedMode.value||'realtime';
-      const tick=SPEED_MS[mode]||SPEED_MS.realtime;
-      [th, speedMode].forEach(x=>x.disabled=true);
-      setService(true, mode);
-      log(`Setup completed. Background monitor started (${mode}, ${tick/1000}s = +1 min)`);
-      monitorTimer=setInterval(()=>{
-        usage.value=Math.min(Number(usage.max), Number(usage.value)+1);
-        render();
-      },tick);
-    };
+    el('start').onclick=startMonitor;
 
     el('stop').onclick=()=>{ monitor=false; clearInterval(monitorTimer); [th, speedMode].forEach(x=>x.disabled=false); stateRow.style.display='flex'; setService(false); log('Background monitor stopped'); };
     el('add5').onclick=()=>{ usage.value=Math.min(Number(usage.max), Number(usage.value)+5); render(); };
@@ -295,6 +282,22 @@
       }catch{}
     }
 
+    function startMonitor(){
+      if(monitor) return;
+      if(selected.size===0){ alert('Select at least one app'); return; }
+      monitor=true;
+      const mode=speedMode.value||'realtime';
+      const tick=SPEED_MS[mode]||SPEED_MS.realtime;
+      [th, speedMode].forEach(x=>x.disabled=true);
+      setService(true, mode);
+      log(`Setup completed. Background monitor started (${mode}, ${tick/1000}s = +1 min)`);
+      monitorTimer=setInterval(()=>{
+        usage.value=Math.min(Number(usage.max), Number(usage.value)+1);
+        render();
+      },tick);
+      render();
+    }
+
     // 3-step setup wizard
     let wizStep=1;
     function renderWizard(){
@@ -313,8 +316,13 @@
       }
     }
     wizNext.onclick=()=>{
-      if(wizStep<3){ wizStep++; renderWizard(); }
-      else { wizard.style.display='none'; log('Setup wizard completed'); }
+      if(wizStep<3){
+        wizStep++; renderWizard();
+      } else {
+        wizard.style.display='none';
+        log('Setup wizard completed');
+        startMonitor();
+      }
     };
 
     setService(false);
